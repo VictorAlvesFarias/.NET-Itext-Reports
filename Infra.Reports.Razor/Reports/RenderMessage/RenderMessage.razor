@@ -1,6 +1,28 @@
 ﻿<h1>Render Message</h1>
 
-<p>@Message</p>
+<p class="custom-message">@Message</p>
+
+<style>
+    h1 {
+        color: #4CAF50; /* Verde */
+        font-family: 'Arial', sans-serif;
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .custom-message {
+        font-size: 1.2em;
+        color: #555; /* Cinza escuro */
+        font-family: 'Georgia', serif;
+        border: 2px solid #4CAF50;
+        padding: 10px;
+        margin: 20px auto;
+        width: 80%;
+        text-align: center;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+    }
+</style>
 
 @code {
     [Parameter]

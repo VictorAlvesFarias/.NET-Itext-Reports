@@ -9,7 +9,7 @@
     }
   },
   "profiles": {
-    "Relatorios_Cshtml": {
+    "Html-Reports": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
