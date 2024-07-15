@@ -1,3 +1,5 @@
+using Application.Services.Itext;
+using Application.Services.Reports;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Relatorios_Cshtml.Controllers
@@ -6,11 +8,23 @@ namespace Relatorios_Cshtml.Controllers
     [Route("[controller]")]
     public class Reports : ControllerBase
     {
+        private readonly IReportsService _reportsService;
+        public Reports(IReportsService reportsService)
+        {
+            _reportsService = reportsService;
+        }
+
         [HttpGet("ping")]
         public IActionResult Ping()
         {
             return Ok();
         }
+        [HttpGet("test")]
+        public IActionResult Test()
+        {
+            var response = _reportsService.TestReport();
 
+            return File(response.File, response.Type, response.FileName);
+        }
     }
 }
