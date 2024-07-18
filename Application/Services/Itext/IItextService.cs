@@ -1,4 +1,5 @@
 ﻿using Application.Dtos.ItextFile;
+using Application.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,7 @@ namespace Application.Services.Itext
 {
     public interface IItextService
     {
-        ItextFileResponse GenerateReportHtml(string html);
+        ItextFileResponse GenerateReportHtml(DocumentConfig html, string fileName);
+        ItextFileResponse Generate(string fileName, HeaderDocument headerDocument, FooterDocument footerDocument, BodyDocument bodyDocument);
     }
 }

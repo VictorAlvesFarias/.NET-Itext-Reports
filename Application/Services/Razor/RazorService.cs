@@ -15,12 +15,7 @@ namespace Application.Service
 
         public async Task<string> Render<T>(Dictionary<string, object?> dictionary) where T : IComponent
         {
-            IServiceCollection services = new ServiceCollection();
-            services.AddLogging();
-            IServiceProvider serviceProvider = services.BuildServiceProvider();
-            ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-
-            await using var htmlRenderer = new HtmlRenderer(serviceProvider, loggerFactory);
+            await using var htmlRenderer = new HtmlRenderer(_serviceProvider, _serviceProvider.GetRequiredService<ILoggerFactory>());
 
             var html = await htmlRenderer.Dispatcher.InvokeAsync(async () =>
             {

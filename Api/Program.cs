@@ -12,7 +12,13 @@ namespace Relatorios_Cshtml
 
             builder.Services.RegisterServices(builder.Configuration);
 
+            builder.Services.AddSwaggerGen(); 
+               
             var app = builder.Build();
+            
+            app.UseSwagger();
+
+            app.UseSwaggerUI();
 
             app.UseHttpsRedirection();
 

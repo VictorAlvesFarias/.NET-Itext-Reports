@@ -5,10 +5,10 @@ namespace Relatorios_Cshtml.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class Razor : ControllerBase
+    public class RazorController : ControllerBase
     {
         private readonly IRazorService _razorService;
-        public Razor(IRazorService razorService)
+        public RazorController(IRazorService razorService)
         {
             _razorService = razorService;
         }

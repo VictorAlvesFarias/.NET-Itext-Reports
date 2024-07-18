@@ -6,10 +6,10 @@ namespace Relatorios_Cshtml.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class Reports : ControllerBase
+    public class ReportsController : ControllerBase
     {
         private readonly IReportsService _reportsService;
-        public Reports(IReportsService reportsService)
+        public ReportsController(IReportsService reportsService)
         {
             _reportsService = reportsService;
         }
