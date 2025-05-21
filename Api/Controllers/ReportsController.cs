@@ -1,6 +1,5 @@
-using Application.Services.Itext;
-using Application.Services.Reports;
 using Microsoft.AspNetCore.Mvc;
+using Reports.Reports;
 
 namespace Relatorios_Cshtml.Controllers
 {
@@ -8,10 +7,10 @@ namespace Relatorios_Cshtml.Controllers
     [Route("[controller]")]
     public class ReportsController : ControllerBase
     {
-        private readonly IReportsService _reportsService;
-        public ReportsController(IReportsService reportsService)
+        private readonly RenderMessageReport _report;
+        public ReportsController(RenderMessageReport report)
         {
-            _reportsService = reportsService;
+            _report = report;
         }
 
         [HttpGet("ping")]
@@ -22,9 +21,13 @@ namespace Relatorios_Cshtml.Controllers
         [HttpGet("test")]
         public IActionResult Test()
         {
-            var response = _reportsService.TestReport();
+            var base64 = _report.Generate().Base64;
+            var fileBytes = Convert.FromBase64String(base64);
+            var contentType = "application/pdf"; // ou o tipo correto do arquivo
+            var fileName = "report.pdf";
 
-            return File(response.File, response.Type, response.FileName);
+            return File(fileBytes, contentType, fileName);
         }
+
     }
 }

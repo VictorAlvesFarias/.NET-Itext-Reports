@@ -9,7 +9,7 @@
     }
   },
   "profiles": {
-    "Html-Reports": {
+    "Dev": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,

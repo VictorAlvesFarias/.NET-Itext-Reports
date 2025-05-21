@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -6,6 +6,7 @@
     <RootNamespace>Relatorios_Cshtml</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="itext.bouncy-castle-adapter" Version="8.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.7" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
@@ -13,7 +14,12 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Application\Application.csproj" />
     <ProjectReference Include="..\Infra.Reports.Razor\Infra.Reports.Razor.csproj" />
+    <ProjectReference Include="..\Infra.Reports\Infra.Reports.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Documents\Class.cs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Compile>
   </ItemGroup>
 </Project>

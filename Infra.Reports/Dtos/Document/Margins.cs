@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Infra.Reports.Razor.Helpers
+namespace Application.Dtos.Document
 {
     public class Margins
     {
