@@ -11,7 +11,8 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components;
 using iText.Kernel.Pdf.Event;
 using iText.Kernel.Colors;
-using Microsoft.AspNetCore.Mvc.RazorPages;
+using Application.Extensions;
+using iText.Layout.Properties;
 
 namespace Reports.Reports.Shared
 {
@@ -20,15 +21,14 @@ namespace Reports.Reports.Shared
         protected IServiceProvider _serviceProvider { get; set; }
         public string Base64 { get; set; }
         public string FileName { get; set; }
-        public HttpResponseMessage FilePFD { get; set; }
+        public HttpResponseMessage File { get; set; }
         public Margins Margins { get; set; }
-
         protected string Build(Margins margins, float footerHeight, float headerHeight, Margins footerMargins = null, PageSize pageSize = null)
         {
             pageSize = pageSize ?? PageSize.A4;
 
             Margins = margins;
-            
+
             var name = Guid.NewGuid().ToString();
 
             using (var streamFinal = new MemoryStream())
@@ -39,7 +39,6 @@ namespace Reports.Reports.Shared
 
                 PdfFormXObject headerForm;
                 PdfFormXObject footerForm;
-
 
                 using (var headerStream = new MemoryStream())
                 {
@@ -52,9 +51,9 @@ namespace Reports.Reports.Shared
 
                     headerDoc.Close();
                     headerPdfDoc = new PdfDocument(new PdfReader(new MemoryStream(headerStream.ToArray())));
-                    
+
                     var headerPage = headerPdfDoc.GetFirstPage();
-                    
+
                     headerHeight = headerPage.GetPageSize().GetHeight();
                     headerForm = headerPage.CopyAsFormXObject(pdfDoc);
                 }
@@ -69,10 +68,10 @@ namespace Reports.Reports.Shared
                     footerDoc.SetBackgroundColor(ColorConstants.BLUE);
 
                     Footer(footerDoc, footerWriter, footerPdfDoc);
-                    
+
                     footerDoc.Close();
                     footerPdfDoc = new PdfDocument(new PdfReader(new MemoryStream(footerStream.ToArray())));
-                    
+
                     var footerPage = footerPdfDoc.GetFirstPage();
 
                     footerHeight = footerPage.GetPageSize().GetHeight();
@@ -94,15 +93,15 @@ namespace Reports.Reports.Shared
                 var pdfBytes = streamFinal.ToArray();
                 var base64String = Convert.ToBase64String(pdfBytes);
 
-                FilePFD = new HttpResponseMessage()
+                File = new HttpResponseMessage()
                 {
                     Content = new ByteArrayContent(pdfBytes)
                 };
-                FilePFD.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
+                File.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
                 {
                     FileName = name + ".pdf"
                 };
-                FilePFD.Content.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+                File.Content.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
 
                 Base64 = base64String;
                 FileName = name + ".pdf";
@@ -126,57 +125,43 @@ namespace Reports.Reports.Shared
         {
 
         }
-        protected Text Strong(string s)
+        public static Text CreateT(string s, Func<Text, Text> styles = null, bool trim = true)
         {
-            var newText = s.Trim();
-
-            return new Text(newText + " ").SimulateBold();
-        }
-        protected Text T(string s, bool trim = true)
-        { 
             if (trim)
             {
                 var newText = s.Trim();
-
-                return new Text(newText + " ");
+                return styles is not null ? styles(new Text(newText + " ")) : new Text(newText + " ");
             }
 
-            return new Text(s + " ");
+            return styles is not null ? styles(new Text(s + " ")) : new Text(s + " ");
         }
-        protected Text Br()
+        public static Paragraph CreateP(List<Text> texts, Func<Paragraph, Paragraph> styles = null)
         {
-            return new Text("\r\n");
-        }
-        protected Paragraph P(List<Text> list)
-        {
-            var paragraph = new Paragraph();
+            var p = new Paragraph();
 
-            list.ForEach(x =>
+            foreach (var text in texts)
             {
-                paragraph.Add(x);
-            });
+                p.Add(text);
+            }
 
-            return paragraph;
+            return styles is not null ? styles(p) : p;
         }
-        protected Paragraph P(Text list)
+        protected List<Paragraph> P(List<Text> texts, Func<Paragraph, Paragraph> styles = null)
         {
-            var paragraph = new Paragraph();
-
-            paragraph.Add(list);
-
-            return paragraph;
+            return new List<Paragraph>() { CreateP(texts, styles) };
         }
-        protected Cell Cell(Paragraph p)
+        protected List<Text> Strong(string s, Func<Text, Text> styles = null, bool trim = true)
         {
-            var cell = new Cell();
-            cell.Add(p);
-            return cell;
+            var text = CreateT(s, styles, trim);
+            return new List<Text>() { text.SimulateBold() };
         }
-        protected Cell Cell(Table p)
+        protected List<Text> T(string s, Func<Text, Text> styles = null, bool trim = true)
         {
-            var cell = new Cell();
-            cell.Add(p);
-            return cell;
+            return new List<Text>() { CreateT(s, styles, trim) };
+        }
+        protected List<Text> Br(Func<Text, Text> styles = null)
+        {
+            return new List<Text>() { CreateT("\r\n", styles, true) };
         }
         protected int GetPages(Document doc, PdfDocument pdfDoc, Margins margins)
         {
@@ -196,6 +181,23 @@ namespace Reports.Reports.Shared
 
             return html;
         }
+        public static Cell CreateCell(IBlockElement content, Func<Cell, Cell> styles = null, int colSpan = 1, int rowSpan = 1)
+        {
+            var cell = new Cell(rowSpan, colSpan).Add(content);
+            return styles is not null ? styles(cell) : cell;
+        }
+        public static Table CreateTable(UnitValue[] columnWidths, Func<Table, Table> styles = null)
+        {
+            var table = new Table(columnWidths);
+            return styles is not null ? styles(table) : table;
+        }
+        protected List<Cell> C(IBlockElement content, Func<Cell, Cell> styles = null, int colSpan = 1, int rowSpan = 1)
+        {
+            return new List<Cell>() { CreateCell(content, styles, colSpan, rowSpan) };
+        }
+        protected List<Table> T(UnitValue[] columnWidths, Func<Table, Table> styles = null)
+        {
+            return new List<Table>() { CreateTable(columnWidths, styles) };
+        }
     }
 }
-
