@@ -118,8 +118,10 @@ The BaseReport class provides a foundation for all PDF reports in the applicatio
 - **Render<T>()**: Renders Razor components with parameter injection
 
 ```csharp
-public class BaseReport
+public class ReportExample
 {
+    //...
+
     protected virtual void Body(Document doc, PdfWriter writer, PdfDocument pdfDoc)
     {
         // Override to implement body content
@@ -134,12 +136,14 @@ public class BaseReport
     {
         // Override to implement footer content
     }
+
+    //...
 }
 ```
 
 ### BaseSpreadsheet Architecture
 
-The BaseSpreadsheet class provides a foundation for all Excel spreadsheets in the application. It handles Excel generation using ClosedXML with support for advanced formatting and styling.
+The BaseSpreadsheet class provides a foundation for all Excel spreadsheets in the application. It handles Excel generation using ClosedXML with support for formatting and styling.
 
 **Key Features:**
 
@@ -155,19 +159,21 @@ public abstract class BaseSpreadsheet
         using (var workbook = new XLWorkbook())
         {
             Spreadsheed(workbook);
-            // File generation logic
+            /...
         }
     }
     
     public abstract void Spreadsheed(XLWorkbook workbook);
 }
+```
 
+```csharp
 // ExcelTable helper for easy table creation
 public class ExcelTable
 {
     public ExcelTable Cell(string text, Action<IXLStyle> style = null)
     {
-        // Cell creation with optional styling
+        //...
     }
 }
 ```
@@ -258,54 +264,116 @@ services.AddScoped<RenderMessageReport>();
 
 ### Creating New Reports
 
-To create a new PDF report, follow these steps:
 
-**1. Create Report Class:**
+To create new reports, see the advanced examples below:
+
+---
+
+### Spreadsheet Example (BaseSpreadsheet)
 
 ```csharp
-public class MeuRelatorio : BaseReport
+public class SalesSpreadsheet : BaseSpreadsheet
 {
-    public MeuRelatorio(IServiceProvider serviceProvider)
+    public override void Spreadsheed(XLWorkbook workbook)
+    {
+        var ws = workbook.Worksheets.Add("Sales Data");
+        var table = new ExcelTable(4, 1, 1, ws);
+
+        // Header row
+        table.Cell("Product", style => { style.Font.Bold = true; style.Fill.BackgroundColor = XLColor.DarkBlue; style.Font.FontColor = XLColor.White; })
+             .Cell("Quantity", style => { style.Font.Bold = true; style.Fill.BackgroundColor = XLColor.DarkBlue; style.Font.FontColor = XLColor.White; })
+             .Cell("Unit Price", style => { style.Font.Bold = true; style.Fill.BackgroundColor = XLColor.DarkBlue; style.Font.FontColor = XLColor.White; })
+             .Cell("Total", style => { style.Font.Bold = true; style.Fill.BackgroundColor = XLColor.DarkBlue; style.Font.FontColor = XLColor.White; });
+
+        // Data rows
+        table.Cell("Laptop").Cell("5").Cell("$1200").Cell("$6000");
+        table.Cell("Mouse").Cell("20").Cell("$25").Cell("$500");
+        table.Cell("Keyboard").Cell("10").Cell("$80").Cell("$800");
+    }
+}
+
+```
+
+### Report Example 1: Using Razor/HTML (BaseReport)
+
+```csharp
+public class InvoiceReport : BaseReport
+{
+    public InvoiceReport(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
     }
 
-    public MeuRelatorio Generate()
+    public InvoiceReport Generate(string customer, decimal total)
     {
-        Build(new Margins(40, 40, 40, 40), 150, 150);
+        Build(new Margins(40, 40, 40, 40), 120, 80);
+        _customer = customer;
+        _total = total;
         return this;
     }
 
+    private string _customer;
+    private decimal _total;
+
     protected override void Body(Document doc, PdfWriter writer, PdfDocument pdfDoc)
     {
-        var html = Render<MeuRelatorioTemplate>(new Dictionary<string, object?>
+        var html = Render<InvoiceTemplate>(new Dictionary<string, object?>
         {
-            { "Content", "Conteúdo personalizado" }
+            { "Customer", _customer },
+            { "Total", _total }
         }).Result;
-        
         doc.AddHtml(html);
     }
 }
 ```
 
-**2. Register in DI Container:**
-
-```csharp
-services.AddScoped<MeuRelatorio>();
-```
-
-**3. Create Razor Template (Optional):**
-
+**InvoiceTemplate.razor**
 ```razor
-@* MeuRelatorioTemplate.razor *@
-<div class="meu-relatorio">
-    <h1>@Title</h1>
-    <p>@Content</p>
+<div class="invoice">
+    <h2>Invoice for @Customer</h2>
+    <p>Total Amount: <b>@Total.ToString("C")</b></p>
 </div>
 
 @code {
-    [Parameter] public string Title { get; set; }
-    [Parameter] public string Content { get; set; }
+    [Parameter] public string Customer { get; set; }
+    [Parameter] public decimal Total { get; set; }
+}
+```
+
+### Report Example 2: Using iText Methods (BaseReport)
+
+```csharp
+public class SimpleTextReport : BaseReport
+{
+    public SimpleTextReport(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+    }
+
+    public SimpleTextReport Generate(string title, string message)
+    {
+        Build(new Margins(30, 30, 30, 30), 80, 80);
+        _title = title;
+        _message = message;
+        return this;
+    }
+
+    private string _title;
+    private string _message;
+
+    protected override void Body(Document doc, PdfWriter writer, PdfDocument pdfDoc)
+    {
+        var titlePara = new Paragraph(_title)
+            .SetFontSize(18)
+            .SetBold()
+            .SetTextAlignment(TextAlignment.CENTER);
+        var messagePara = new Paragraph(_message)
+            .SetFontSize(12)
+            .SetTextAlignment(TextAlignment.LEFT);
+
+        doc.Add(titlePara);
+        doc.Add(messagePara);
+    }
 }
 ```
 
@@ -332,16 +400,6 @@ public class MinhaPlanilha : BaseSpreadsheet
              .Cell("joao@email.com");
     }
 }
-```
-
-**2. Usage:**
-
-```csharp
-var spreadsheet = new MinhaPlanilha();
-var base64 = spreadsheet.Generate();
-var fileBytes = Convert.FromBase64String(base64);
-
-return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "planilha.xlsx");
 ```
 
 ### Customization
@@ -405,62 +463,45 @@ Configure logging in `appsettings.json`:
 }
 ```
 
-**Swagger Documentation:**
+## Deployment
 
-Access https://localhost:7001/swagger to test endpoints directly and view API documentation.
+### Production Configuration
 
-**Common Issues:**
+1. Update connection strings for production database
+2. Configure proper JWT/security keys if needed
+3. Set up HTTPS certificates
+4. Configure logging for production environment
+5. Set up proper CORS policies
 
-1. **PDF Generation Errors**: Check iText7 dependencies and license
-2. **Excel Generation Errors**: Verify ClosedXML and EPPlus dependencies
-3. **Razor Rendering Issues**: Verify component parameters and HTML structure
-4. **Memory Issues**: Ensure proper disposal of PDF and Excel streams
+### Docker Support
 
-## Technologies Used
+The project can be containerized using Docker:
 
-- **.NET 8.0** - Main framework
-- **iText7** - PDF generation library
-- **ClosedXML** - Excel manipulation library
-- **EPPlus** - Advanced Excel features
-- **Razor Components** - HTML templating
-- **ASP.NET Core Web API** - REST API framework
-- **Swagger** - API documentation
-- **Dependency Injection** - Service management
+```dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 80
+EXPOSE 443
 
-## Package Dependencies
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY ["Api/Api.csproj", "Api/"]
+COPY ["Infra.Reports/Infra.Reports.csproj", "Infra.Reports/"]
+COPY ["Infra.Reports.Razor/Infra.Reports.Razor.csproj", "Infra.Reports.Razor/"]
+RUN dotnet restore "Api/Api.csproj"
+COPY . .
+WORKDIR "/src/Api"
+RUN dotnet build "Api.csproj" -c Release -o /app/build
 
-### Api
-- `itext.bouncy-castle-adapter` (8.0.4)
-- `Microsoft.AspNetCore.Components.Web` (8.0.7)
-- `Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation` (8.0.7)
-- `Swashbuckle.AspNetCore` (6.6.2)
+FROM build AS publish
+RUN dotnet publish "Api.csproj" -c Release -o /app/publish
 
-### Infra.Reports
-- `itext7` (9.2.0)
-- `itext7.pdfhtml` (6.2.0)
-- `ClosedXML` (0.105.0)
-- `EPPlus` (8.0.8)
-- `Microsoft.AspNetCore.Components.Web` (8.0.7)
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "Api.dll"]
+```
 
-### Infra.Reports.Razor
-- `Microsoft.AspNetCore.Components.Web` (8.0.7)
-- `Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation` (8.0.7)
+### License
 
-## Support
-
-If you encounter any issues or have questions:
-
-1. Check iText7 documentation
-2. Review ClosedXML and EPPlus documentation
-3. Review application logs
-4. Test endpoints via Swagger
-5. Open an issue in the repository
-
-## Useful Links
-
-- [iText7 Documentation](https://itextpdf.com/en/products/itext-7)
-- [ClosedXML Documentation](https://github.com/ClosedXML/ClosedXML)
-- [EPPlus Documentation](https://epplussoftware.com/)
-- [ASP.NET Core Documentation](https://docs.microsoft.com/en-us/aspnet/core/)
-- [Razor Components](https://docs.microsoft.com/en-us/aspnet/core/blazor/components/)
-- [Swagger Documentation](https://swagger.io/docs/) 
+This project is licensed under the MIT License - see the LICENSE file for details.
